@@ -1,10 +1,305 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>My App</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>❄ 何の日カレンダー ❄</title>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink2:#ff85b3; --lavender:#d4b8f0; --deep:#5a3a6e; --mid:#8b5ca8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  font-family:'Zen Maru Gothic',sans-serif;min-height:100vh;
+  background:#fce8f3;
+  background-image:
+    radial-gradient(ellipse at 15% 10%,#ffd6eb 0%,transparent 45%),
+    radial-gradient(ellipse at 85% 5%,#d6eaff 0%,transparent 40%),
+    radial-gradient(ellipse at 50% 90%,#e8d6ff 0%,transparent 50%),
+    radial-gradient(ellipse at 10% 80%,#d6f5e8 0%,transparent 40%);
+  overflow-x:hidden;display:flex;flex-direction:column;
+}
+.bg-deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.bg-deco span{position:absolute;animation:bgFloat linear infinite;opacity:0;user-select:none;}
+@keyframes bgFloat{
+  0%{transform:translateY(100vh) rotate(0deg);opacity:0;}
+  10%{opacity:0.4;} 90%{opacity:0.4;}
+  100%{transform:translateY(-10vh) rotate(360deg);opacity:0;}
+}
+.app{position:relative;z-index:1;width:100%;max-width:1100px;margin:0 auto;padding:1rem 1rem 1.5rem;display:flex;flex-direction:column;flex:1;}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:center;gap:0.8rem;margin-bottom:1rem;}
+.header-icon{font-size:2.2rem;animation:charaFloat 4s ease-in-out infinite;}
+@keyframes charaFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
+.title-wrap{position:relative;}
+.title-main{
+font-family:‘Kaisei Decol’,serif;font-size:clamp(1.4rem,3.5vw,2.2rem);font-weight:700;
+background:linear-gradient(135deg,#ff85b3,#c77dff,#74b9ff);
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+letter-spacing:0.05em;line-height:1.1;
+}
+.title-deco{font-size:0.7rem;color:var(–mid);font-weight:700;letter-spacing:0.22em;opacity:0.75;}
+.sparkle{position:absolute;animation:sparkleAnim 2s ease-in-out infinite;font-size:1rem;}
+.sparkle:nth-child(1){top:-8px;left:-16px;animation-delay:0s;}
+.sparkle:nth-child(2){top:-4px;right:-14px;animation-delay:0.6s;}
+@keyframes sparkleAnim{0%,100%{transform:scale(1) rotate(0deg);opacity:1}50%{transform:scale(1.4) rotate(20deg);opacity:0.6}}
+
+/* CALENDAR CARD */
+.cal-card{
+background:rgba(255,255,255,0.72);backdrop-filter:blur(16px);
+border-radius:28px;border:2.5px solid rgba(255,255,255,0.9);
+box-shadow:0 8px 40px rgba(200,120,220,0.18),inset 0 1px 0 rgba(255,255,255,0.8);
+overflow:hidden;flex:1;display:flex;flex-direction:column;
+}
+.month-nav{
+background:linear-gradient(135deg,#ffb7d5 0%,#d4b8f0 50%,#a8d8f0 100%);
+padding:0.85rem 1.4rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.nav-btn{
+width:44px;height:44px;border-radius:50%;border:2.5px solid rgba(255,255,255,0.7);
+background:rgba(255,255,255,0.45);color:var(–deep);font-size:1.1rem;cursor:pointer;
+transition:all 0.25s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;justify-content:center;
+font-weight:900;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(150,80,200,0.15);
+}
+.nav-btn:hover{background:rgba(255,255,255,0.75);transform:scale(1.12);}
+.month-label{font-family:‘Kaisei Decol’,serif;font-size:1.7rem;font-weight:700;color:var(–deep);letter-spacing:0.08em;text-shadow:0 2px 8px rgba(255,255,255,0.8);}
+.month-label-sub{font-size:0.65rem;color:rgba(90,58,110,0.6);font-weight:700;letter-spacing:0.18em;margin-top:0.1rem;text-align:center;}
+
+.dow-row{
+display:grid;grid-template-columns:repeat(7,1fr);
+background:linear-gradient(to bottom,rgba(255,220,240,0.5),rgba(255,240,248,0.3));
+border-bottom:1.5px solid rgba(220,160,220,0.2);flex-shrink:0;
+}
+.dow{text-align:center;font-size:0.8rem;font-weight:700;padding:0.45rem 0;letter-spacing:0.05em;}
+.dow.sun{color:#ff5c7a;} .dow.sat{color:#7b9fff;} .dow.wkd{color:var(–mid);}
+
+.days-grid{
+display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;
+gap:6px;padding:0.6rem;background:rgba(255,248,255,0.4);flex:1;
+}
+.day-cell{
+border-radius:16px;cursor:pointer;position:relative;overflow:hidden;
+transition:transform 0.2s cubic-bezier(.34,1.56,.64,1),box-shadow 0.2s;
+background:rgba(255,255,255,0.6);border:1.5px solid rgba(255,200,230,0.4);min-height:0;
+}
+.day-cell:hover:not(.empty){
+transform:scale(1.04) translateY(-2px);box-shadow:0 8px 24px rgba(200,100,200,0.22);
+z-index:2;border-color:rgba(220,140,220,0.7);
+}
+.day-cell.empty{background:rgba(255,255,255,0.18);cursor:default;border-color:transparent;}
+.day-cell.today{
+background:linear-gradient(135deg,rgba(255,183,213,0.55),rgba(212,184,240,0.55));
+border:2.5px solid var(–pink2);box-shadow:0 2px 14px rgba(255,133,179,0.3);
+}
+.cell-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.cell-overlay{
+position:absolute;inset:0;
+background:linear-gradient(to bottom,transparent 50%,rgba(255,230,245,0.4) 100%);
+border-radius:14px;pointer-events:none;
+}
+.cell-upload{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:3;}
+.add-icon{
+position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+font-size:1.6rem;color:rgba(180,100,200,0.2);transition:all 0.2s;z-index:1;
+}
+.day-cell:hover .add-icon{color:rgba(255,100,150,0.5);transform:scale(1.2);}
+.day-cell.has-img .add-icon{opacity:0;}
+
+/* 右クリック削除ヒント */
+.day-cell.has-img::after{
+content:‘長押しで削除’;position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
+font-size:0.38rem;font-weight:700;color:white;
+background:rgba(90,58,110,0.5);border-radius:4px;padding:1px 4px;
+opacity:0;transition:opacity 0.2s;white-space:nowrap;z-index:4;pointer-events:none;
+}
+.day-cell.has-img:hover::after{opacity:1;}
+
+.day-num{
+position:absolute;top:5px;left:6px;z-index:2;
+font-size:0.88rem;font-weight:900;width:26px;height:26px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;
+background:rgba(255,255,255,0.9);backdrop-filter:blur(4px);
+box-shadow:0 1px 6px rgba(200,100,200,0.18);color:var(–deep);
+}
+.day-cell.sun .day-num{color:#ff5c7a;}
+.day-cell.sat .day-num{color:#7b9fff;}
+.day-cell.today .day-num{
+background:linear-gradient(135deg,var(–pink2),var(–lavender));
+color:white;box-shadow:0 2px 10px rgba(255,100,150,0.4);
+}
+.today-badge{
+position:absolute;top:5px;right:6px;z-index:2;font-size:1rem;
+animation:heartbeat 1.2s ease-in-out infinite;
+}
+@keyframes heartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.28)}}
+
+/* storage indicator */
+.save-indicator{
+position:fixed;bottom:1rem;right:1rem;z-index:100;
+background:rgba(255,133,179,0.9);color:white;
+font-size:0.72rem;font-weight:700;padding:0.4rem 0.8rem;
+border-radius:20px;backdrop-filter:blur(4px);
+opacity:0;transition:opacity 0.3s;pointer-events:none;
+}
+.save-indicator.show{opacity:1;}
+
+footer{
+text-align:center;margin-top:0.8rem;font-size:0.68rem;
+color:rgba(150,80,180,0.4);font-weight:700;letter-spacing:0.15em;position:relative;z-index:1;
+}
+</style>
+
 </head>
 <body>
-  <h1>公開テスト成功</h1>
+<div class="bg-deco" id="bgDeco"></div>
+<div class="save-indicator" id="saveIndicator">💾 保存しました</div>
+
+<div class="app">
+  <div class="header">
+    <div class="header-icon">❄️</div>
+    <div class="title-wrap">
+      <span class="sparkle">✨</span>
+      <span class="sparkle">💫</span>
+      <h1 class="title-main">今日は何の日？</h1>
+      <p class="title-deco">❄ WINTER CALENDAR ❄</p>
+    </div>
+    <div class="header-icon" style="animation-delay:1s">🌸</div>
+  </div>
+
+  <div class="cal-card">
+    <div class="month-nav">
+      <button class="nav-btn" id="prevBtn">◀</button>
+      <div style="text-align:center">
+        <div class="month-label" id="monthLabel"></div>
+        <div class="month-label-sub" id="monthLabelSub"></div>
+      </div>
+      <button class="nav-btn" id="nextBtn">▶</button>
+    </div>
+    <div class="dow-row">
+      <div class="dow sun">日</div><div class="dow wkd">月</div><div class="dow wkd">火</div>
+      <div class="dow wkd">水</div><div class="dow wkd">木</div><div class="dow wkd">金</div><div class="dow sat">土</div>
+    </div>
+    <div class="days-grid" id="daysGrid"></div>
+  </div>
+
+  <footer>✨ 画像はブラウザに保存されます｜長押しで削除 ✨</footer>
+</div>
+
+<script>
+// bg deco
+(function(){
+  const emojis=['❄','💕','⭐','✨','💫','🌸','💎','🎀','❅','💜'];
+  const c=document.getElementById('bgDeco');
+  for(let i=0;i<28;i++){
+    const s=document.createElement('span');
+    s.textContent=emojis[i%emojis.length];
+    const sz=Math.random()*14+10;
+    s.style.cssText=`left:${Math.random()*100}%;font-size:${sz}px;animation-duration:${Math.random()*18+10}s;animation-delay:${Math.random()*12}s;`;
+    c.appendChild(s);
+  }
+})();
+
+const MONTHS_JP=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const MONTHS_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const today=new Date();
+let curY=today.getFullYear(), curM=today.getMonth();
+
+// localStorage helpers
+const LS_PREFIX='kawaii_cal_img_';
+function saveImg(key,dataUrl){
+  try{localStorage.setItem(LS_PREFIX+key,dataUrl);showSaved();}
+  catch(e){alert('画像が大きすぎて保存できませんでした。より小さい画像をお試しください。');}
+}
+function loadImg(key){return localStorage.getItem(LS_PREFIX+key);}
+function deleteImg(key){localStorage.removeItem(LS_PREFIX+key);}
+
+let saveTimer;
+function showSaved(){
+  const el=document.getElementById('saveIndicator');
+  el.classList.add('show');
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+function renderCal(){
+  document.getElementById('monthLabel').textContent=`${curY}年 ${MONTHS_JP[curM]}`;
+  document.getElementById('monthLabelSub').textContent=MONTHS_EN[curM]+' '+curY;
+  const grid=document.getElementById('daysGrid');
+  grid.innerHTML='';
+  const fd=new Date(curY,curM,1).getDay();
+  const dim=new Date(curY,curM+1,0).getDate();
+  const totalCells=Math.ceil((fd+dim)/7)*7;
+
+  for(let i=0;i<fd;i++){
+    const e=document.createElement('div');e.className='day-cell empty';grid.appendChild(e);
+  }
+  for(let d=1;d<=dim;d++){
+    const dow=(fd+d-1)%7;
+    const isToday=(d===today.getDate()&&curM===today.getMonth()&&curY===today.getFullYear());
+    const key=`${curY}-${curM}-${d}`;
+    const saved=loadImg(key);
+    const cell=document.createElement('div');
+    cell.className='day-cell'+(dow===0?' sun':dow===6?' sat':'')+(isToday?' today':'')+(saved?' has-img':'');
+
+    if(saved){
+      const img=document.createElement('img');img.className='cell-img';img.src=saved;cell.appendChild(img);
+      const ov=document.createElement('div');ov.className='cell-overlay';cell.appendChild(ov);
+    }
+    const ic=document.createElement('div');ic.className='add-icon';ic.textContent='🖼';cell.appendChild(ic);
+
+    // file upload
+    const fi=document.createElement('input');fi.type='file';fi.accept='image/*';
+    fi.style.cssText='position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:3;';
+    fi.addEventListener('change',e=>{
+      const f=e.target.files[0];if(!f)return;
+      // resize before saving to keep localStorage usage low
+      const reader=new FileReader();
+      reader.onload=ev=>{
+        const img=new Image();
+        img.onload=()=>{
+          const MAX=400;
+          let w=img.width,h=img.height;
+          if(w>MAX||h>MAX){const r=Math.min(MAX/w,MAX/h);w=Math.round(w*r);h=Math.round(h*r);}
+          const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+          canvas.getContext('2d').drawImage(img,0,0,w,h);
+          const dataUrl=canvas.toDataURL('image/jpeg',0.75);
+          saveImg(key,dataUrl);
+          renderCal();
+        };
+        img.src=ev.target.result;
+      };
+      reader.readAsDataURL(f);
+    });
+    cell.appendChild(fi);
+
+    // long-press to delete
+    let pressTimer;
+    cell.addEventListener('pointerdown',()=>{
+      if(!loadImg(key))return;
+      pressTimer=setTimeout(()=>{
+        if(confirm(`${curM+1}月${d}日の画像を削除しますか？`)){deleteImg(key);renderCal();}
+      },600);
+    });
+    cell.addEventListener('pointerup',()=>clearTimeout(pressTimer));
+    cell.addEventListener('pointerleave',()=>clearTimeout(pressTimer));
+
+    const num=document.createElement('div');num.className='day-num';num.textContent=d;cell.appendChild(num);
+    if(isToday){const tb=document.createElement('div');tb.className='today-badge';tb.textContent='💗';cell.appendChild(tb);}
+    grid.appendChild(cell);
+  }
+  for(let i=0;i<totalCells-(fd+dim);i++){
+    const e=document.createElement('div');e.className='day-cell empty';grid.appendChild(e);
+  }
+}
+
+document.getElementById('prevBtn').addEventListener('click',()=>{curM--;if(curM<0){curM=11;curY--;}renderCal();});
+document.getElementById('nextBtn').addEventListener('click',()=>{curM++;if(curM>11){curM=0;curY++;}renderCal();});
+renderCal();
+</script>
+
 </body>
 </html>
